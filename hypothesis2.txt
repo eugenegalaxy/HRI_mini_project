@@ -1,0 +1,49 @@
+library(ggplot2)
+HRI <- read.csv("~/Jevgenijs_mini-project/data/HRILabDaysData.csv") # Replace by your-path.
+View(HRI)
+
+# Since data is dependent and parametric, checking for difference
+
+# DATA NORMALITY check for difference between TLX.A. and TLX.B.
+# Histogram + density plot (visual assessment)
+hist.TLX.diff. <- ggplot(HRI, aes(TLX.diff.)) + theme(legend.position = "none") +
+                  geom_histogram(aes(y=..density..),
+                  colour = "black", fill = "white")
+hist.TLX.diff. + stat_function(fun=dnorm, args = list(mean =mean(HRI$TLX.diff.,
+                 na.rm = TRUE), sd = sd(HRI$TLX.diff., na.rm = TRUE)),
+                 colour = "black", size =1)
+
+# QQplot (visual assessment)
+qqplot.TLX.diff. <- qplot(sample=HRI$TLX.diff., stat ="qq")
+qqplot.TLX.diff.
+
+# Shapiro-Wilk test (statistical assessment) p-value must be > 0.05 for data to be assumed NORMAL.
+shapiro.test(HRI$TLX.diff.) # W = 0.95026, p-value = 0.4292 -> NORMAL
+
+
+# Running depedent t-test
+dep.t.test <- t.test(HRI$TLX.A., HRI$TLX.B., paired = TRUE)
+dep.t.test # t = -6.3102, df = 17, p-value = 7.832e-06
+           # alternative hypothesis: true difference in means is not equal to 0
+           # 95 percent confidence interval:
+           #    -34.3128 -17.1172
+
+# Computing effect-size
+t <- dep.t.test$statistic[[1]]
+df <- dep.t.test$parameter[[1]]
+r <- sqrt(t^2/(t^2 + df))
+r # 0.8371396 effect size is huge
+
+# Running statistic description of two scores to get mean/SE values.
+stat.desc(HRI$TLX.A., basic=FALSE, norm=TRUE) # mean 32.7488889 SE.mean 3.7317821
+stat.desc(HRI$TLX.B., basic=FALSE, norm=TRUE) # mean 58.4638889 SE.mean 3.2665485
+
+# Open the reshaped HRILabDaysData.csv dataset for plotting
+data <- read_excel("/data/data.xlsx") # Replace by your-path.
+View(data)    
+
+# Create a bar plot showing mean cognitive load using mirrored and imitated condition.
+TLX_Bar <- ggplot(data, aes(Condition, TLX)) + 
+           stat_summary(fun.y = mean, geom = "bar", fill="White", colour="Black") + 
+           stat_summary(fun.data = mean_cl_normal, geom="pointrange")
+TLX_Bar 

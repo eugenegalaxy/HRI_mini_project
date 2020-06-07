@@ -1,0 +1,58 @@
+library(ggplot2)
+HRI <- read.csv("~/Jevgenijs_mini-project/data/HRILabDaysData.csv") # Replace by your-path.
+View(HRI)
+
+# Data normality check for TotalTime.A.
+# Histogram + density plot (visual assessment)
+hist.TotalTime.A. <- ggplot(HRI, aes(TotalTime.A.)) + theme(legend.position = "none") +
+                     geom_histogram(aes(y=..density..), colour = "black", fill = "white")
+
+hist.TotalTime.A. + stat_function(fun=dnorm, args = list(mean =mean(HRI$TotalTime.A.,
+                    na.rm = TRUE), sd = sd(HRI$TotalTime.A., na.rm = TRUE)),
+                    colour = "black", size =1)
+
+# QQplot (visual assessment)
+qqplot.TotalTime.A. <- qplot(sample=HRI$TotalTime.A., stat ="qq")
+qqplot.TotalTime.A.
+
+# Shapiro-Wilk test (statistical assessment) p-value must be > 0.05 for data to be assumed NORMAL.
+shapiro.test(HRI$TotalTime.A.) # W = 0.96025, p-value = 0.6065 NORMAL
+
+
+# Data normality check for TotalTime.B.
+# Histogram + density plot (visual assessment)
+hist.TotalTime.B. <- ggplot(HRI, aes(TotalTime.B.)) + theme(legend.position = "none") +
+                     geom_histogram(aes(y=..density..), colour = "black", fill = "white")
+
+hist.TotalTime.B. + stat_function(fun=dnorm, args = list(mean =mean(HRI$TotalTime.B.,
+                    na.rm = TRUE), sd = sd(HRI$TotalTime.B., na.rm = TRUE)),
+                    colour = "black", size =1)
+
+# QQplot (visual assessment)
+qqplot.TotalTime.B. <- qplot(sample=HRI$TotalTime.B., stat ="qq")
+qqplot.TotalTime.B.
+
+# Shapiro-Wilk test (statistical assessment) p-value must be > 0.05 for data to be assumed NORMAL.
+shapiro.test(HRI$TotalTime.B.) # W = 0.69887, p-value = 7.747e-05 SUPER NON-NORMAL
+
+
+
+# Wilcoxon signed-rank test for TotalTime.A. and TotalTime.B.
+# p-value below 0.05 means SIGNIFICANT difference between scores.
+TotalTimeModel <- wilcox.test(HRI$TotalTime.A., HRI$TotalTime.B., paired=TRUE, correct=FALSE)
+TotalTimeModel # V = 33.5, p-value = 0.04168 alternative hypothesis: true location shift is not equal to 0
+
+# Running statistic description of two scores to get median values.
+stat.desc(HRI$TotalTime.A., basic=FALSE, norm=TRUE) # median = 44.50
+stat.desc(HRI$TotalTime.B., basic=FALSE, norm=TRUE) # median = 51
+
+# Open the reshaped HRILabDaysData.csv dataset for plotting
+data <- read_excel("/data/data.xlsx") # Replace by your-path.
+View(data)    
+
+# Create a bar plot showing mean time performance using mirrored and imitated condition.
+TotalTime_Bar <- ggplot(data, aes(Condition, TotalTime)) + 
+                 stat_summary(fun.y = mean, geom = "bar", fill="White", colour="Black") + 
+                 stat_summary(fun.data = mean_cl_normal, geom="pointrange")
+TotalTime_Bar 
+
